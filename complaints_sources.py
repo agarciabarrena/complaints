@@ -1,4 +1,4 @@
-from connectors.db_connector import RedshiftConnector
+from utils.connectors.db_connector import RedshiftConnector
 import pandas as pd
 
 
