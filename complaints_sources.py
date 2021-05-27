@@ -8,7 +8,7 @@ with open('sql/complaint_sources.sql', 'r') as file:
 conn = RedshiftConnector()
 df = conn.query_df(query)
 
-df_tag = pd.read_csv('data_raw/complaints_fcst_and_scored.csv', sep=',')  #'data_raw/complaints_tagged_reg.csv', sep=';')
+df_tag = pd.read_csv('old/complaints_fcst_and_scored.csv', sep=',')  #'data_raw/complaints_tagged_reg.csv', sep=';')
 
 d = df_tag.merge(df,'left', 'customer_care_id')
 

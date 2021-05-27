@@ -6,11 +6,7 @@ from sklearn.metrics import confusion_matrix, mean_absolute_error, mean_squared_
 from matplotlib import pyplot as plt
 import xgboost
 import numpy as np
-
-import logging
-FORMAT = '%(asctime) %(user) %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-logger = logging.getLogger('ml_utils')
+from config import logger
 
 def get_optimum_Kmean(train_data, max_clusters: int=10, show_graph: bool=False):
     distorsions = []

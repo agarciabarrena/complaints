@@ -2,11 +2,7 @@ from utils.connectors.db_connector import RedshiftConnector
 import pandas as pd
 from utils.ml_utils import get_optimum_regression
 from utils.check_subscriptions import prepare_text_df, save_model, load_model
-
-import logging
-FORMAT = '%(asctime) %(user) %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-logger = logging.getLogger('complaints')
+from config import logger
 
 
 lang = 'EN'

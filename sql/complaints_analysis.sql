@@ -16,7 +16,7 @@ cleaned_used_lang as(
 select cce.customer_care_id as customer_care_id,
        cce.timestamp,
        json_extract_path_text(cce.args, 'feedback') as message,
-       lang.most_used_portal_language as portal_language
+       lang.most_used_portal_language as language
 from customer_care_flow_events cce
     left join cleaned_used_lang lang
         on cce.customer_care_id = lang.customer_care_id

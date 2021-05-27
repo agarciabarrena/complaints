@@ -3,8 +3,6 @@ from datetime import datetime
 import psycopg2
 import logging
 import boto3
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 import pandas as pd
 logger = logging.getLogger('Connectors')
@@ -31,13 +29,6 @@ class RedshiftConnector:
     def get_connector(self):
         return self.connector
 
-    def upload_df(self, df: pd.DataFrame, table_name: str, schema=None, mode='fail') -> None:
-        engine = create_engine(self.credentials)
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        logger.info(f'Uploading {df.shape} dataframe to table {schema + "."}{table_name}')
-        df.to_sql(name=table_name, con=session.get_bind(), schema=schema, index=False, if_exists=mode, method='multi')
-
 
     def copy_df_to_redshift(self, data: pd.DataFrame, table_name: str) -> None:
         filename = f'{datetime.now().strftime("%Y-%m-%d")}/{table_name}-{datetime.now().strftime("%H:%M:%S")}.csv'
@@ -58,11 +49,11 @@ class RedshiftConnector:
         return None
 
 
-    def check_table_exists(self, table_name: str, schema:str='public') -> bool:
+    def __check_table_exists(self, table_name: str, schema:str='public') -> bool:
         self.cursor.execute(f"select exists(select * from information_schema.tables where table_name={schema + '.' + table_name})")
         return  self.cursor.fetchone()[0]
 
 
-    def delete_table(self, table_name: str, schema:str='public'):
+    def __delete_table(self, table_name: str, schema:str='public'):
         self.cursor.execute(f"DROP TABLE IF EXISTS {schema +'.'+ table_name}")
         return None
