@@ -1,0 +1,8 @@
+venv*
+.idea
+.ipynb*
+*.csv
+*.pyc
+__pycache__
+.DS_Store
+models
