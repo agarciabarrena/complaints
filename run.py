@@ -39,5 +39,3 @@ def forecast_single(text: str):
     model_trained = load_model('reg_trained')
     y_fcst = model_trained.predict(df_ohe)
     return y_fcst
-
-f = forecast_single('')
