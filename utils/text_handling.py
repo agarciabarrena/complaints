@@ -28,6 +28,8 @@ def text_preparation(df: pd.DataFrame, language: str='english', text_column: str
     for pattern in extra_stopwords:
         messages = messages.apply(lambda document: [term for term in document if not re.match(f'^[{pattern}]*$', term)])
 
+    # TODO Add translation here
+
     # Word stemming
     snowball_stemmer = nltk.stem.SnowballStemmer(language)
     messages = messages.apply(lambda document: [snowball_stemmer.stem(term) for term in document])

@@ -12,7 +12,6 @@ from utils.text_handling import text_preparation
 
 def prepare_text_df(df, text_column: str = 'message'):
     df = df_cleaning(df, text_column)
-    # TODO Add translation here
     df = text_preparation(df, 'english')
     return df
 
