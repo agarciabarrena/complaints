@@ -4,15 +4,17 @@ import pickle
 import pandas as pd
 from sklearn.preprocessing import MultiLabelBinarizer
 from config import MODELS_FOLDER, logger
+from datetime import datetime
 
 from utils.connectors.db_connector import RedshiftConnector
 from utils.text_handling import text_preparation
+from config import LANGUAGE_COL, training_data_path
 
 
 
-def prepare_text_df(df, text_column: str = 'message'):
-    df = df_cleaning(df, text_column)
-    df = text_preparation(df, 'english')
+def prepare_text_df(df):
+    df = df_cleaning(df)
+    df = text_preparation(df)
     return df
 
 
@@ -38,7 +40,7 @@ class OneHotEncoder():
         return mlb
 
     def convert(self, text_data: pd.DataFrame, use_local_model: bool=False):
-        if not self.ohe_model:
+        if not self.ohe_model and not use_local_model:
             logger.error("Please train the model first or select the use_local_model option instead")
         if use_local_model:
             ohe_model = self.__load_local()
@@ -49,14 +51,10 @@ class OneHotEncoder():
                            index=text_data['processed_message'].index)
         return df_text
 
-def df_cleaning(df: pd.DataFrame, text_column: str='message') -> pd.DataFrame:
+def df_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    n = df.shape[0]  # Save original number of reviews
     if 'customer_care_id' in df.columns:
         df.drop('customer_care_id', axis=1, inplace=True)
-    df = df[df[text_column] != ""]  # Clean empty
-    df = df.assign(message=df[text_column].str.lower())
-    logger.info(f'Original number of reviews: {n}\nNumber of reviews after cleaning: {df.shape[0]}')
     return df
 
 
@@ -73,11 +71,25 @@ def load_model(name: str):
 
 def load_data(training_data: bool=False):
     if training_data:
-        df = pd.read_csv('data_raw/complaints_tagged_reg.csv', sep=';')
+        df = pd.read_csv(training_data_path, sep=';')
+        df[LANGUAGE_COL] = df[LANGUAGE_COL].str.lower()
     else:
-        # TODO add query for future values with language modification made by Utkarsh
-        with open('sql/complaints_analysis.sql', 'r') as file:
+        with open('sql/complaints_new.sql', 'r') as file:
             query = file.read()
         conn = RedshiftConnector()
         df = conn.query_df(query)
     return df
+
+def manual_add_review(review: str, score: float, language: str='en'):
+    df = load_data(training_data=True)
+    max_num_manual_review = df['customer_care_id'].str.split('manual_upload_').str[1].astype(float).max()
+    row_2_append = pd.DataFrame({'customer_care_id': [f'manual_upload_{int(max_num_manual_review+1)}'],
+                                 'timestamp': [datetime.now()],
+                                 'message': [review],
+                                 'language': [language],
+                                 'risk_score':[0],
+                                 'wes_score': [0],
+                                 'risk_score_combined': [score]})
+    df = df.append(row_2_append, ignore_index=True)
+    df.to_csv(training_data_path, sep=';', index=False)
+    return None
