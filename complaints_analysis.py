@@ -7,7 +7,7 @@ from config import logger
 
 lang = 'EN'
 
-df_scored = pd.read_csv('data_raw/complaints_tagged_reg.csv', sep=';')
+df_scored = pd.read_csv('data_raw/training_data.csv', sep=';')
 
 df_train = prepare_text_df(df_scored, 'EN', model_ohe_fit=True)
 
