@@ -51,6 +51,41 @@ class OneHotEncoder():
                            index=text_data['processed_message'].index)
         return df_text
 
+
+class Complains():
+    def forecast_new_feedbacks(self):
+        '''
+        Send the feedback/s to the API to get the scores and the translations if needed
+        '''
+        df = self.__extract_new_feedbacks()
+        # TODO make connection to the API
+        return None
+
+    def __extract_last_report_date(self):
+        '''
+        Query the database to obtain the last execution date so we can find new feedbacks since last processing
+        '''
+        query = ("""SELECT MAX(insert_timestamp) as execution_date 
+                from customer_care_flow_events where action='feedback_forecasted'""")
+        conn = RedshiftConnector()
+        df = conn.query_df(query)
+        max_date = df['execution_date'][0]
+        return max_date
+
+    def __extract_new_feedbacks(self):
+        last_date = self.__extract_last_report_date()
+        with open('sql/complaints_new.sql', 'r') as f:
+            query = f.read()
+        query = query.format(last_execution_timestamp=last_date)
+        conn = RedshiftConnector()
+        df = conn.query_df(query)
+        # TODO Handle empty dataframe
+        return df
+
+    def save_in_redshift_table(self):
+        return None
+
+
 def df_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     if 'customer_care_id' in df.columns:

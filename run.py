@@ -1,5 +1,6 @@
 from utils.ml_utils import get_optimum_regression
-from utils.check_subscriptions import prepare_text_df, save_model, load_model, OneHotEncoder, load_data, manual_add_review
+from utils.check_subscriptions import prepare_text_df,\
+    save_model, load_model, OneHotEncoder, load_data, manual_add_review, Complains
 from dotenv import load_dotenv
 from config import logger, RISK_SCORE_COL
 import pandas as pd
@@ -45,3 +46,6 @@ def forecast_single(text: str):
 
 def add_train_review(review: str,score: float, language: str='en'):
     manual_add_review(review=review, score=score, language=language)
+
+c = Complains()
+c.extract_new_feedbacks()
