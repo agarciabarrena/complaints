@@ -79,7 +79,9 @@ class Complains():
         query = query.format(last_execution_timestamp=last_date)
         conn = RedshiftConnector()
         df = conn.query_df(query)
-        # TODO Handle empty dataframe
+        if df.empty:
+            logger.info(f'There is no new feedback after {last_date}')
+            exit()
         return df
 
     def save_in_redshift_table(self):

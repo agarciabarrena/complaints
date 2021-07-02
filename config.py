@@ -9,4 +9,5 @@ TEXT_COL = 'message'
 TRANSLATED_COL = 'message_translated'
 LANGUAGE_COL = 'language'
 RISK_SCORE_COL = 'risk_score'
+BUCKET_NAME = 'complaints-check-subscriptions'
 

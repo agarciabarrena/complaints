@@ -48,4 +48,4 @@ def add_train_review(review: str,score: float, language: str='en'):
     manual_add_review(review=review, score=score, language=language)
 
 c = Complains()
-c.extract_new_feedbacks()
+c.forecast_new_feedbacks()
