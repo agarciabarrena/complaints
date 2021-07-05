@@ -53,22 +53,6 @@ class RedshiftConnector:
         self.connector.commit()
         return None
 
-    def insert_many(self, table, columns: list, params: List[list]):
-        try:
-            with self.connector.cursor() as cursor:
-                query = 'INSERT INTO {} ("{}") VALUES %s'.format(table, '","'.join(columns))
-                print(f"SQL-START: {query}")
-                psycopg2.extras.execute_values(
-                    cursor,
-                    query,
-                    params,
-                )
-                self.connector.commit()
-                print('SQL-DONE - affected rows: {}'.format(cursor.rowcount))
-        except Exception as e:
-            self.connector.rollback()
-            raise e
-
 
     def __check_table_exists(self, table_name: str, schema:str='public') -> bool:
         self.cursor.execute(f"select exists(select * from information_schema.tables where table_name={schema + '.' + table_name})")

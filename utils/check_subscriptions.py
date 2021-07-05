@@ -98,8 +98,8 @@ class Complains():
         '''
         Query the database to obtain the last execution date so we can find new feedbacks since last processing
         '''
-        query = ("""SELECT MAX(insert_timestamp) as execution_date 
-                from customer_care_flow_events where action='feedback_forecasted'""")
+        query = (f"""SELECT MAX(insert_timestamp) as execution_date 
+                from {OUTPUT_REDSHIFT_TABLE} where action='feedback_forecasted'""")
         conn = RedshiftConnector()
         df = conn.query_df(query)
         max_date = df['execution_date'][0]
@@ -113,7 +113,7 @@ class Complains():
         conn = RedshiftConnector()
         df = conn.query_df(query)
         if df.empty:
-            logger.info(f'There is no new feedback after {last_date}')
+            logger.info(f'There is no new feedbacks after {last_date}')
             exit()
         return df
 
