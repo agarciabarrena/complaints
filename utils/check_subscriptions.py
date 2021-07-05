@@ -8,7 +8,7 @@ from datetime import datetime
 
 from utils.connectors.db_connector import RedshiftConnector
 from utils.text_handling import text_preparation
-from config import LANGUAGE_COL, training_data_path
+from config import LANGUAGE_COL, RISK_SCORE_COL, training_data_path, OUTPUT_REDSHIFT_TABLE, TRANSLATED_COL, TEXT_COL
 
 
 
@@ -53,13 +53,46 @@ class OneHotEncoder():
 
 
 class Complains():
-    def forecast_new_feedbacks(self):
+    def forecast_new_feedbacks(self, local=False):
         '''
+        local: use the API or use a local model to get the score.
         Send the feedback/s to the API to get the scores and the translations if needed
         '''
         df = self.__extract_new_feedbacks()
-        # TODO make connection to the API
+        if local:
+            df_translation_fcst = self.forecast_batch_local(df)
+        else:
+            # TODO make connection to the API
+            pass
+        df = df.join(df_translation_fcst)
+        df = self.__adapt_to_redshift_table(df)
+        df.to_csv('./data/delete.csv')
+        conn = RedshiftConnector()
+        conn.copy_df_to_redshift(data=df, table_name=OUTPUT_REDSHIFT_TABLE)
         return None
+
+    def __adapt_to_redshift_table(self, df: pd.DataFrame):
+        df['impression_id'] = 0
+        df['category'] = 'forecast'
+        df['action'] = 'feedback_forecasted'
+        cols_2_array = ['msisdn', 'rockman_id', 'reason', LANGUAGE_COL, TEXT_COL, TRANSLATED_COL, RISK_SCORE_COL]
+        df['args'] = df[cols_2_array].to_dict(orient='records')
+        df.drop(columns=cols_2_array, inplace=True)
+        df['relative_time'] = 0
+        df['insert_timestamp'] = datetime.now()
+        return df
+
+
+    def forecast_batch_local(self, df):
+        df = prepare_text_df(df)
+        ohe = OneHotEncoder()
+        df_ohe = ohe.convert(text_data=df, use_local_model=True)
+
+        model_trained = load_model('reg_trained')
+        y_fcst = model_trained.predict(df_ohe)
+
+        df[RISK_SCORE_COL] = y_fcst
+        return df[[TRANSLATED_COL, RISK_SCORE_COL]]
 
     def __extract_last_report_date(self):
         '''

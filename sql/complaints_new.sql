@@ -2,7 +2,8 @@
 select
        customer_care_id
      ,cce.timestamp
-     ,json_extract_path_text(cce.args, 'feedback') as msisdn
+     ,json_extract_path_text(cce.args, 'msisdn') as msisdn
+     ,json_extract_path_text(cce.args, 'rockman_id') as rockman_id
      ,json_extract_path_text(cce.args, 'feedback') as message
      ,json_extract_path_text(cce.args, 'reason') as reason
      ,json_extract_path_text(cce.args, 'lang') as language
