@@ -15,6 +15,7 @@ RISK_SCORE_COL = 'risk_score'
 
 # S3 config:
 BUCKET_NAME = 'complaints-check-subscriptions'
+s3_MODELS_FOLDER = 'models'
 
 # Redshift config:
 OUTPUT_REDSHIFT_TABLE = 'dev.customer_care_flow_events'

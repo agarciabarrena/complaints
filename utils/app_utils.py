@@ -2,7 +2,7 @@ from utils.check_subscriptions import prepare_text_df, OneHotEncoder
 from config import BUCKET_NAME
 import pandas as pd
 import boto3
-from config import RISK_SCORE_COL
+from config import RISK_SCORE_COL, s3_MODELS_FOLDER
 
 
 def forecast_batch(data: dict) -> pd.DataFrame:
@@ -20,4 +20,4 @@ def forecast_batch(data: dict) -> pd.DataFrame:
     return df
 
 def load_from_S3(filename: str):
-    return boto3.resource('s3').Object(BUCKET_NAME, filename).load()
+    return boto3.resource('s3').Object(bucket_name=BUCKET_NAME, key=s3_MODELS_FOLDER + '/' + filename).load()

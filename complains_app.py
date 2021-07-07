@@ -24,10 +24,5 @@ def prediction_server_API_call():
         return_data = df.to_json(orient='records')
         return return_data
 
-
-@application.route('/retrain', methods=['Post'])
-def retrain_model_server_API_call():
-    pass
-
 if __name__ == "__main__":
     application.run()

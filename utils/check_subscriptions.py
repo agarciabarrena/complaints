@@ -1,5 +1,6 @@
 import os
 import pickle
+import requests
 
 import pandas as pd
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -23,11 +24,11 @@ class OneHotEncoder():
         self.ohe_model = False
 
     def __load_local(self):
-        mlb = load_model('ohencoder')
+        mlb = local_load_model('ohencoder')
         return mlb
 
     def __save_local(self, model):
-        save_model(model, 'ohencoder')
+        local_save_model(model, 'ohencoder')
 
     def train(self, text_data: pd.DataFrame=pd.DataFrame(), save_local: bool=False):
         assert not text_data.empty
@@ -53,20 +54,35 @@ class OneHotEncoder():
 
 
 class Complains():
-    def forecast_new_feedbacks(self, local=False):
+    def forecast_and_upload_new_feedbacks(self, use_api=True):
         '''
-        local: use the API or use a local model to get the score.
+        use_api: use the API or use a local model to get the score.
         Send the feedback/s to the API to get the scores and the translations if needed
         '''
         df = self.__extract_new_feedbacks()
-        if local:
-            df_translation_fcst = self.forecast_batch_local(df)
-        else:
+        if use_api:
             # TODO make connection to the API
-            pass
+            requests.post(url='www', data=[1,2,3], json={'a':'hola'})
+        else:
+            df_translation_fcst = self.forecast_batch_local(df)
+
         df = df.join(df_translation_fcst)
+        self.__save_in_redshift_table(df)
+        return None
+
+    def forecast_batch_local(self, df):
+        df = prepare_text_df(df)
+        ohe = OneHotEncoder()
+        df_ohe = ohe.convert(text_data=df, use_local_model=True)
+
+        model_trained = local_load_model('reg_trained')
+        y_fcst = model_trained.predict(df_ohe)
+
+        df[RISK_SCORE_COL] = y_fcst
+        return df[[TRANSLATED_COL, RISK_SCORE_COL]]
+
+    def __save_in_redshift_table(self, df: pd.DataFrame):
         df = self.__adapt_to_redshift_table(df)
-        df.to_csv('./data/delete.csv')
         conn = RedshiftConnector()
         conn.copy_df_to_redshift(data=df, table_name=OUTPUT_REDSHIFT_TABLE)
         return None
@@ -82,24 +98,11 @@ class Complains():
         df['insert_timestamp'] = datetime.now()
         return df
 
-
-    def forecast_batch_local(self, df):
-        df = prepare_text_df(df)
-        ohe = OneHotEncoder()
-        df_ohe = ohe.convert(text_data=df, use_local_model=True)
-
-        model_trained = load_model('reg_trained')
-        y_fcst = model_trained.predict(df_ohe)
-
-        df[RISK_SCORE_COL] = y_fcst
-        return df[[TRANSLATED_COL, RISK_SCORE_COL]]
-
     def __extract_last_report_date(self):
         '''
         Query the database to obtain the last execution date so we can find new feedbacks since last processing
         '''
-        query = (f"""SELECT MAX(insert_timestamp) as execution_date 
-                from {OUTPUT_REDSHIFT_TABLE} where action='feedback_forecasted'""")
+        query = (f"SELECT MAX(insert_timestamp) as execution_date from {OUTPUT_REDSHIFT_TABLE} where action='feedback_forecasted'")
         conn = RedshiftConnector()
         df = conn.query_df(query)
         max_date = df['execution_date'][0]
@@ -117,9 +120,6 @@ class Complains():
             exit()
         return df
 
-    def save_in_redshift_table(self):
-        return None
-
 
 def df_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -128,12 +128,13 @@ def df_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def save_model(object, name: str) -> None:
+def local_save_model(object, name: str) -> None:
     with open(os.path.join(MODELS_FOLDER, f'{name}.bin'), 'wb') as file:
         pickle.dump(object, file)
     return None
 
-def load_model(name: str):
+
+def local_load_model(name: str):
     with open(os.path.join(MODELS_FOLDER, f'{name}.bin'), 'rb') as file:
         model = pickle.load(file)
     return model

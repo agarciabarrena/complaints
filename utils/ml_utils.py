@@ -16,12 +16,3 @@ def get_optimum_regression(train_data, values_data: pd.DataFrame, train_pct: flo
     logger.info(f'mean abs error: {mean_absolute_error(y_test, predictions)}')
     logger.info(f'root mean sqrt error: {mean_squared_error(y_test, predictions, squared=False)}')
     return model
-
-
-def ohe(df: pd.DataFrame):
-    ohe = df.select_dtypes(include='object')
-    cols_2_ohe = ohe.columns
-    ohe = pd.get_dummies(ohe)
-    df_no_ohe = df[[col for col in df.columns if col not in cols_2_ohe]]
-    output = pd.concat([df_no_ohe, ohe], axis=1)
-    return output
